@@ -4,7 +4,7 @@ version: 2.0.3
 homepage: https://github.com/yako-dev/flutter-settings-ui
 
 environment:
-  sdk: '>=2.12.0 <3.0.0'
+  sdk: ^3.8.1
 
 dependencies:
   flutter:
@@ -13,6 +13,14 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  pedantic: ^1.11.1
+  flutter_lints: ^6.0.0
 
 flutter:
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:

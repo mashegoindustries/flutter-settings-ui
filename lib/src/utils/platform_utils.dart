@@ -48,4 +48,47 @@ class PlatformUtils {
         return DevicePlatform.windows;
     }
   }
+
+  static bool languageIsRTL(BuildContext context) {
+    const rtlLanguages = [
+      "ar",
+      "arc",
+      "dv",
+      "fa",
+      "ha",
+      "he",
+      "khw",
+      "ks",
+      "ku",
+      "ps",
+      "ur",
+      "yi",
+
+      // Primary RTL Languages
+      "ar", // Arabic
+      "fa", // Persian (Farsi)
+      "he", // Hebrew
+      "ps", // Pashto
+      "ur", // Urdu
+      "yi", // Yiddish
+
+      // Other commonly cited RTL languages/scripts
+      "arc", // Aramaic (modern and classical Syriac script)
+      "ckb", // Kurdish (Sorani, which uses Arabic script)
+      "dv", // Divehi (Maldivian) - uses the Thaana script
+      "ha", // Hausa (when written in Ajami/Arabic script)
+      "khw", // Khowar (uses a modified Urdu script)
+      "ks", // Kashmiri (often uses Perso-Arabic script)
+      "ku", // Kurdish (covers Sorani and others)
+      "mly", // Malay (when written in Jawi/Arabic script)
+      "sd", // Sindhi (often uses Perso-Arabic script)
+      "syr", // Syriac
+      "ug", // Uyghur (uses Perso-Arabic script
+    ];
+    final language = Localizations.localeOf(context).languageCode.toLowerCase();
+
+    return rtlLanguages.contains(language);
+  }
+
+
 }

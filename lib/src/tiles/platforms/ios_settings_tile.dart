@@ -5,22 +5,27 @@ import 'package:settings_ui/settings_ui.dart';
 class IOSSettingsTile extends StatefulWidget {
   const IOSSettingsTile({
     required this.tileType,
-    required this.leading,
-    required this.title,
-    required this.description,
-    required this.onPressed,
-    required this.onToggle,
-    required this.value,
-    required this.initialValue,
-    required this.activeSwitchColor,
-    required this.enabled,
-    required this.trailing,
-    Key? key,
-  }) : super(key: key);
+    this.leading,
+    this.title,
+    this.titleDescription,
+    this.description,
+    this.onPressed,
+    this.onToggle,
+    this.value,
+    this.initialValue,
+    this.activeSwitchColor,
+    this.enabled = true,
+    this.trailing,
+    this.titlePadding,
+    this.leadingPadding,
+    this.titleDescriptionPadding,
+    super.key,
+  });
 
   final SettingsTileType tileType;
   final Widget? leading;
   final Widget? title;
+  final Widget? titleDescription;
   final Widget? description;
   final Function(BuildContext context)? onPressed;
   final Function(bool value)? onToggle;
@@ -29,9 +34,12 @@ class IOSSettingsTile extends StatefulWidget {
   final bool enabled;
   final Color? activeSwitchColor;
   final Widget? trailing;
+  final EdgeInsetsGeometry? titlePadding;
+  final EdgeInsetsGeometry? leadingPadding;
+  final EdgeInsetsGeometry? titleDescriptionPadding;
 
   @override
-  _IOSSettingsTileState createState() => _IOSSettingsTileState();
+  State<IOSSettingsTile> createState() => _IOSSettingsTileState();
 }
 
 class _IOSSettingsTileState extends State<IOSSettingsTile> {
@@ -39,173 +47,164 @@ class _IOSSettingsTileState extends State<IOSSettingsTile> {
 
   @override
   Widget build(BuildContext context) {
-    final additionalInfo = IOSSettingsTileAdditionalInfo.of(context);
     final theme = SettingsTheme.of(context);
+    final additionalInfo = IOSSettingsTileAdditionalInfo.of(context);
 
     return IgnorePointer(
       ignoring: !widget.enabled,
       child: Column(
         children: [
-          buildTitle(
-            context: context,
-            theme: theme,
-            additionalInfo: additionalInfo,
-          ),
+          _buildTile(context, theme, additionalInfo),
           if (widget.description != null)
-            buildDescription(
-              context: context,
-              theme: theme,
-              additionalInfo: additionalInfo,
-            ),
+            _buildDescription(context, theme, additionalInfo),
         ],
       ),
     );
   }
 
-  Widget buildTitle({
-    required BuildContext context,
-    required SettingsTheme theme,
-    required IOSSettingsTileAdditionalInfo additionalInfo,
-  }) {
-    Widget content = buildTileContent(context, theme, additionalInfo);
-    DevicePlatform platform = PlatformUtils.detectPlatform(context);
-    if (platform != DevicePlatform.iOS) {
-      content = Material(
-        color: Colors.transparent,
-        child: content,
-      );
+  Widget _buildTile(BuildContext context, SettingsTheme theme,
+      IOSSettingsTileAdditionalInfo additionalInfo) {
+    Widget content = _buildTileContent(context, theme, additionalInfo);
+
+    // Wrap with Material for ripple effect on Android
+    if (Theme.of(context).platform != TargetPlatform.iOS) {
+      content = Material(color: Colors.transparent, child: content);
     }
 
     return ClipRRect(
       borderRadius: BorderRadius.vertical(
         top: additionalInfo.enableTopBorderRadius
-            ? Radius.circular(12)
+            ? const Radius.circular(12)
             : Radius.zero,
         bottom: additionalInfo.enableBottomBorderRadius
-            ? Radius.circular(12)
+            ? const Radius.circular(12)
             : Radius.zero,
       ),
       child: content,
     );
   }
 
-  Widget buildDescription({
-    required BuildContext context,
-    required SettingsTheme theme,
-    required IOSSettingsTileAdditionalInfo additionalInfo,
-  }) {
-    final scaleFactor = MediaQuery.of(context).textScaleFactor;
-
+  Widget _buildDescription(BuildContext context, SettingsTheme theme,
+      IOSSettingsTileAdditionalInfo additionalInfo) {
+    final scale = MediaQuery.of(context).textScaleFactor;
     return Container(
-      width: MediaQuery.of(context).size.width,
+      width: double.infinity,
       padding: EdgeInsets.only(
         left: 18,
         right: 18,
-        top: 8 * scaleFactor,
-        bottom: additionalInfo.needToShowDivider ? 24 : 8 * scaleFactor,
+        top: 8 * scale,
+        bottom: additionalInfo.needToShowDivider ? 24 : 8 * scale,
       ),
-      decoration: BoxDecoration(
-        color: theme.themeData.settingsListBackground,
-      ),
+      color: theme.themeData.settingsListBackground,
       child: DefaultTextStyle(
         style: TextStyle(
           color: theme.themeData.titleTextColor,
-          fontSize: 13,
+          fontSize: 13 * scale,
         ),
         child: widget.description!,
       ),
     );
   }
 
-  Widget buildTrailing({
-    required BuildContext context,
-    required SettingsTheme theme,
-  }) {
-    final scaleFactor = MediaQuery.of(context).textScaleFactor;
+  Widget _buildTrailing(BuildContext context, SettingsTheme theme) {
+    final scale = MediaQuery.of(context).textScaleFactor;
+    final showValue = widget.tileType == SettingsTileType.navigationTile &&
+        widget.value != null;
 
     return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        if (widget.trailing != null) widget.trailing!,
-        if (widget.tileType == SettingsTileType.switchTile)
-          CupertinoSwitch(
-            value: widget.initialValue ?? true,
-            onChanged: widget.onToggle,
-            activeColor: widget.enabled
-                ? widget.activeSwitchColor
-                : theme.themeData.inactiveTitleColor,
-          ),
-        if (widget.tileType == SettingsTileType.navigationTile &&
-            widget.value != null)
-          DefaultTextStyle(
-            style: TextStyle(
-              color: widget.enabled
-                  ? theme.themeData.trailingTextColor
-                  : theme.themeData.inactiveTitleColor,
-              fontSize: 17,
+        if (widget.trailing != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: IconTheme(
+              data: IconTheme.of(context).copyWith(
+                color: widget.enabled
+                    ? theme.themeData.leadingIconsColor
+                    : theme.themeData.inactiveTitleColor,
+              ),
+              child: widget.trailing!,
             ),
-            child: widget.value!,
+          ),
+        if (widget.tileType == SettingsTileType.switchTile)
+          _buildAdaptiveSwitch(context),
+        if (showValue)
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: DefaultTextStyle(
+              style: TextStyle(
+                color: widget.enabled
+                    ? theme.themeData.trailingTextColor
+                    : theme.themeData.inactiveTitleColor,
+                fontSize: 17 * scale,
+              ),
+              child: widget.value!,
+            ),
           ),
         if (widget.tileType == SettingsTileType.navigationTile)
           Padding(
             padding: const EdgeInsetsDirectional.only(start: 6, end: 2),
-            child: IconTheme(
-              data: IconTheme.of(context)
-                  .copyWith(color: theme.themeData.leadingIconsColor),
-              child: Icon(
-                CupertinoIcons.chevron_forward,
-                size: 18 * scaleFactor,
-              ),
+            child: Icon(
+              PlatformUtils.languageIsRTL(context)
+                  ? CupertinoIcons.chevron_back
+                  : CupertinoIcons.chevron_forward,
+              size: 18 * scale,
+              color: theme.themeData.leadingIconsColor,
             ),
           ),
       ],
     );
   }
 
-  void changePressState({bool isPressed = false}) {
-    if (mounted) {
-      setState(() {
-        this.isPressed = isPressed;
-      });
+  Widget _buildAdaptiveSwitch(BuildContext context) {
+    final platform = Theme.of(context).platform;
+    final switchValue = widget.initialValue ?? true;
+
+    if (platform == TargetPlatform.iOS) {
+      return CupertinoSwitch(
+        value: switchValue,
+        onChanged: widget.onToggle,
+        activeColor: widget.enabled
+            ? widget.activeSwitchColor
+            : SettingsTheme.of(context).themeData.inactiveTitleColor,
+      );
+    } else {
+      return Switch.adaptive(
+        value: switchValue,
+        onChanged: widget.onToggle,
+        activeColor: widget.enabled
+            ? widget.activeSwitchColor
+            : SettingsTheme.of(context).themeData.inactiveTitleColor,
+      );
     }
   }
 
-  Widget buildTileContent(
-    BuildContext context,
-    SettingsTheme theme,
-    IOSSettingsTileAdditionalInfo additionalInfo,
-  ) {
-    final scaleFactor = MediaQuery.of(context).textScaleFactor;
+  Widget _buildTileContent(BuildContext context, SettingsTheme theme,
+      IOSSettingsTileAdditionalInfo additionalInfo) {
+    final scale = MediaQuery.of(context).textScaleFactor;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: widget.onPressed == null
-          ? null
-          : () {
-              changePressState(isPressed: true);
-
-              widget.onPressed!.call(context);
-
-              Future.delayed(
-                Duration(milliseconds: 100),
-                () => changePressState(isPressed: false),
-              );
-            },
-      onTapDown: (_) =>
-          widget.onPressed == null ? null : changePressState(isPressed: true),
-      onTapUp: (_) =>
-          widget.onPressed == null ? null : changePressState(isPressed: false),
-      onTapCancel: () =>
-          widget.onPressed == null ? null : changePressState(isPressed: false),
+    return InkWell(
+      onTap: widget.onPressed == null ? null : () => widget.onPressed!(context),
+      borderRadius: BorderRadius.vertical(
+        top: additionalInfo.enableTopBorderRadius
+            ? const Radius.circular(12)
+            : Radius.zero,
+        bottom: additionalInfo.enableBottomBorderRadius
+            ? const Radius.circular(12)
+            : Radius.zero,
+      ),
       child: Container(
         color: isPressed
             ? theme.themeData.tileHighlightColor
             : theme.themeData.settingsSectionBackground,
-        padding: EdgeInsetsDirectional.only(start: 18),
+        padding: const EdgeInsetsDirectional.only(start: 18),
         child: Row(
           children: [
             if (widget.leading != null)
               Padding(
-                padding: const EdgeInsetsDirectional.only(end: 12.0),
+                padding: widget.leadingPadding ??
+                    const EdgeInsetsDirectional.only(end: 12),
                 child: IconTheme.merge(
                   data: IconThemeData(
                     color: widget.enabled
@@ -218,30 +217,52 @@ class _IOSSettingsTileState extends State<IOSSettingsTile> {
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(
                     padding: const EdgeInsetsDirectional.only(end: 16),
                     child: Row(
                       children: [
                         Expanded(
-                          child: Padding(
-                            padding: EdgeInsetsDirectional.only(
-                              top: 12.5 * scaleFactor,
-                              bottom: 12.5 * scaleFactor,
-                            ),
-                            child: DefaultTextStyle(
-                              style: TextStyle(
-                                color: widget.enabled
-                                    ? theme.themeData.settingsTileTextColor
-                                    : theme.themeData.inactiveTitleColor,
-                                fontSize: 16,
-                              ),
-                              child: widget.title!,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (widget.title != null)
+                                Padding(
+                                  padding: widget.titlePadding ??
+                                      EdgeInsets.only(
+                                        top: 12.5 * scale,
+                                        bottom: widget.titleDescription == null
+                                            ? 12.5 * scale
+                                            : 3.5 * scale,
+                                      ),
+                                  child: DefaultTextStyle(
+                                    style: TextStyle(
+                                      color: widget.enabled
+                                          ? theme.themeData.settingsTileTextColor
+                                          : theme.themeData.inactiveTitleColor,
+                                      fontSize: 16 * scale,
+                                    ),
+                                    child: widget.title!,
+                                  ),
+                                ),
+                              if (widget.titleDescription != null)
+                                Padding(
+                                  padding: widget.titleDescriptionPadding ??
+                                      EdgeInsets.only(bottom: 12.5 * scale),
+                                  child: DefaultTextStyle(
+                                    style: TextStyle(
+                                      color: widget.enabled
+                                          ? theme.themeData.titleTextColor
+                                          : theme.themeData.inactiveTitleColor,
+                                      fontSize: 15 * scale,
+                                    ),
+                                    child: widget.titleDescription!,
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
-                        buildTrailing(context: context, theme: theme),
+                        _buildTrailing(context, theme),
                       ],
                     ),
                   ),
@@ -267,25 +288,24 @@ class IOSSettingsTileAdditionalInfo extends InheritedWidget {
   final bool enableTopBorderRadius;
   final bool enableBottomBorderRadius;
 
-  IOSSettingsTileAdditionalInfo({
+  const IOSSettingsTileAdditionalInfo({
+    super.key,
     required this.needToShowDivider,
     required this.enableTopBorderRadius,
     required this.enableBottomBorderRadius,
-    required Widget child,
-  }) : super(child: child);
+    required super.child,
+  });
 
   @override
-  bool updateShouldNotify(IOSSettingsTileAdditionalInfo old) => true;
+  bool updateShouldNotify(IOSSettingsTileAdditionalInfo oldWidget) => true;
 
   static IOSSettingsTileAdditionalInfo of(BuildContext context) {
-    final IOSSettingsTileAdditionalInfo? result = context
-        .dependOnInheritedWidgetOfExactType<IOSSettingsTileAdditionalInfo>();
-    // assert(result != null, 'No IOSSettingsTileAdditionalInfo found in context');
-    return result ??
-        IOSSettingsTileAdditionalInfo(
+    return context
+        .dependOnInheritedWidgetOfExactType<IOSSettingsTileAdditionalInfo>() ??
+        const IOSSettingsTileAdditionalInfo(
           needToShowDivider: true,
-          enableBottomBorderRadius: true,
           enableTopBorderRadius: true,
+          enableBottomBorderRadius: true,
           child: SizedBox(),
         );
   }

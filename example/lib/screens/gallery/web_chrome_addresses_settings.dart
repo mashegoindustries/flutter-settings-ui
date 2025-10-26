@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:settings_ui/settings_ui.dart';
 
 class WebChromeAddressesScreen extends StatefulWidget {
-  WebChromeAddressesScreen({Key key}) : super(key: key);
-
   @override
   State<WebChromeAddressesScreen> createState() =>
       _WebChromeAddressesScreenState();
@@ -26,7 +24,7 @@ class _WebChromeAddressesScreenState extends State<WebChromeAddressesScreen> {
                 initialValue: _toggle,
                 onToggle: (_) {
                   setState(() {
-                    _toggle = _;
+                    _toggle = !_toggle;
                   });
                 },
                 trailing: Icon(Icons.info),
